@@ -1,8 +1,8 @@
 use std::env;
-use std::fs;
 use std::fs::File;
 use std::io::{BufReader, BufRead};
-use crypto_hashes;
+use crypto_hashes::digest::Digest;
+use crypto_hashes::{md5, sha1, sha2, sha3};
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -17,13 +17,24 @@ fn main() {
     let hash = args[3].trim();
     let reader = BufReader::new(wordlist_file);
 
-    let mut hasher = match hash_alg {
-        "sha256" => crypto_hashes::sha256::Sha256::new(),
-        "sha512" => crypto_hashes::sha512::Sha512::new(),
-        "md5" => crypto_hashes::md5::Md5::new(),
-        _ => {
-            eprintln!("Unsupported hash algorithm: {}", hash_alg);
+    for line in reader.lines() {
+        let word = line.expect("Failed to read line").trim().to_string();
+        let computed_hash = match hash_alg {
+            "md5" => format!("{:x}", md5::Md5::digest(word.as_bytes())),
+            "sha1" => format!("{:x}", sha1::Sha1::digest(word.as_bytes())),
+            "sha256" => format!("{:x}", sha2::Sha256::digest(word.as_bytes())),
+            "sha512" => format!("{:x}", sha2::Sha512::digest(word.as_bytes())),
+            "sha3-256" => format!("{:x}", sha3::Sha3_256::digest(word.as_bytes())),
+            "sha3-512" => format!("{:x}", sha3::Sha3_512::digest(word.as_bytes())),
+            _ => {
+                eprintln!("Unsupported hash algorithm: {}", hash_alg);
+                return;
+            }
+        };
+
+        if computed_hash == hash {
+            println!("Found matching word: {}", word);
             return;
         }
-    };
+    }
 }

@@ -4,4 +4,5 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-crypto_hashes = "0.10.0"
+crypto-hashes = { version = "0.10", features = ["include_weak"] }
+hex = "0.4"
